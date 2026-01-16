@@ -13,7 +13,7 @@ import streamlit as st
 from PIL import Image
 
 genai.configure(api_key="AIzaSyA6a0Wk_DEvEFhHMEqEOOFvXwwPF6rC6s0")
-model = genai.GenerativeModel('gemini-1.5-flash-latest')
+model = genai.GenerativeModel('models/gemini-1.5-flash')
 
 st.title("🌱 Eco-Scan: AI Waste Assistant")
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
