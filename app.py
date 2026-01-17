@@ -1,69 +1,67 @@
+import os
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
-import os
 
 # 1. API Configuration
-# Replace with a fresh key from AI Studio if this one continues to show 403 errors
+# Your key starting with AIza...
 API_KEY = "AIzaSyA6a0Wk_DEvEFhHMEqEOOFvXwwPF6rC6s0"
 genai.configure(api_key=API_KEY)
 
-# 2. Page Setup
-st.set_page_config(page_title="Eco-Scan AI", page_icon="🌱")
+# 2. Page Configuration
+st.set_page_config(page_title="Eco-Scan: AI Waste Assistant", page_icon="🌱", layout="centered")
 st.title("🌱 Eco-Scan: AI Waste Assistant")
 st.markdown("---")
 
-# 3. Secure Model Initialization
-# We use a list of models to try. If the first fails, it moves to the next stable one.
-model_names = ['models/gemini-1.5-flash', 'gemini-1.5-flash', 'models/gemini-2.0-flash']
-model = None
+# 3. Model Initialization (Fixing the 404 Error)
+# We use the current 2026 stable model names. 
+# Gemini 2.5 Flash is the recommended stable upgrade for 1.5 Flash users.
+try:
+    # Option 1: Try the latest stable 2.5 Flash
+    model = genai.GenerativeModel('gemini-2.5-flash')
+except Exception:
+    # Option 2: Fallback to 2.0 Flash (GA version) if 2.5 is unavailable
+    model = genai.GenerativeModel('gemini-2.0-flash-001')
 
-for name in model_names:
-    try:
-        model = genai.GenerativeModel(name)
-        # Quick test to see if the model is actually reachable
-        break 
-    except Exception:
-        continue
-
-if not model:
-    st.error("Could not connect to Google AI. Please check your API key restrictions.")
-
-# 4. Image Upload Logic
+# 4. User Interface
 uploaded_file = st.file_uploader("Upload a photo of waste items...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
+    # Open and display the image
     image = Image.open(uploaded_file)
-    st.image(image, caption='Captured Waste Item', use_container_width=True)
+    st.image(image, caption='Uploaded Waste Item', use_container_width=True)
     
-    if st.button('Analyze with Eco-Scan AI'):
-        if not model:
-            st.error("Model not initialized. Check API Key.")
-        else:
-            with st.spinner('AI is classifying material...'):
-                try:
-                    # Comprehensive prompt for better disposal instructions
-                    prompt = (
-                        "Analyze this image carefully. Identify the object and its material. "
-                        "Provide: 1. Material identification. 2. Is it recyclable? "
-                        "3. Specific sustainable disposal instructions."
-                    )
+    # 5. Analysis Logic
+    if st.button('Analyze with AI'):
+        with st.spinner('Gemini AI is analyzing material...'):
+            try:
+                # Custom instructions for the AI
+                prompt = (
+                    "Act as a sustainability expert. Identify the object and its material in this image. "
+                    "Provide a report including: 1. Material Type. 2. Is it recyclable? "
+                    "3. Step-by-step sustainable disposal instructions."
+                )
+                
+                # Make the API call
+                response = model.generate_content([prompt, image])
+                
+                if response and response.text:
+                    st.success("Analysis Complete!")
+                    st.markdown("### 📋 AI Disposal Report")
+                    st.write(response.text)
+                else:
+                    st.warning("The AI returned an empty response. Please try a clearer photo.")
                     
-                    # Generate response
-                    response = model.generate_content([prompt, image])
-                    
-                    if response:
-                        st.success("Analysis Complete!")
-                        st.markdown("### 📋 Disposal Report")
-                        st.write(response.text)
-                    else:
-                        st.error("AI returned an empty response. Try a clearer image.")
-                        
-                except Exception as e:
-                    # This prints the EXACT error code (403, 404, etc.) for you to see
-                    st.error(f"Raw API Error: {e}")
-                    st.info("Tip: If you see '403', your API key is blocked. Create a new one in Google AI Studio.")
+            except Exception as e:
+                # This will catch and display specific error codes (like 403 or 429)
+                st.error(f"Raw API Error: {e}")
+                if "403" in str(e):
+                    st.info("💡 Your API key is likely blocked. Generate a new key in Google AI Studio.")
+                elif "429" in str(e):
+                    st.info("💡 You have reached the free tier limit. Wait a few minutes and try again.")
+                elif "404" in str(e):
+                    st.info("💡 Model not found. The server region may not support this specific model version.")
 
-# 5. Footer
+# 6. Footer
 st.markdown("---")
-st.caption("Powered by Google Gemini 1.5 Flash • Developed for TechSprint Hackathon")
+st.caption("Developed by Arka • Powered by Google Gemini 2.5 Flash")
