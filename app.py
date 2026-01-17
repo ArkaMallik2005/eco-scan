@@ -1,38 +1,44 @@
-import os
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# 1. API Configuration
-# Your key starting with AIza...
-API_KEY = "AIzaSyA6a0Wk_DEvEFhHMEqEOOFvXwwPF6rC6s0"
-genai.configure(api_key=API_KEY)
+# 1. Secure API Configuration
+# This pulls the key from the 'Secrets' tab in your Streamlit Cloud dashboard.
+try:
+    if "GOOGLE_API_KEY" in st.secrets:
+        API_KEY = st.secrets["GOOGLE_API_KEY"]
+        genai.configure(api_key=API_KEY)
+    else:
+        st.error("❌ API Key not found in Streamlit Secrets!")
+        st.info("Go to: Manage App > Settings > Secrets and add: GOOGLE_API_KEY = 'your_key_here'")
+        st.stop()
+except Exception as e:
+    st.error(f"Error accessing secrets: {e}")
+    st.stop()
 
 # 2. Page Configuration
-st.set_page_config(page_title="Eco-Scan: AI Waste Assistant", page_icon="🌱", layout="centered")
+st.set_page_config(page_title="Eco-Scan AI", page_icon="🌱", layout="centered")
 st.title("🌱 Eco-Scan: AI Waste Assistant")
 st.markdown("---")
 
-# 3. Model Initialization (Fixing the 404 Error)
-# We use the current 2026 stable model names. 
-# Gemini 2.5 Flash is the recommended stable upgrade for 1.5 Flash users.
+# 3. Model Initialization
+# We use Gemini 2.5 Flash as it is the most stable version for 2026.
 try:
-    # Option 1: Try the latest stable 2.5 Flash
     model = genai.GenerativeModel('gemini-2.5-flash')
-except Exception:
-    # Option 2: Fallback to 2.0 Flash (GA version) if 2.5 is unavailable
-    model = genai.GenerativeModel('gemini-2.0-flash-001')
+except Exception as e:
+    st.error(f"Model initialization failed: {e}")
+    st.stop()
 
 # 4. User Interface
 uploaded_file = st.file_uploader("Upload a photo of waste items...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # Open and display the image
+    # Display the uploaded image
     image = Image.open(uploaded_file)
-    st.image(image, caption='Uploaded Waste Item', use_container_width=True)
+    st.image(image, caption='Captured Waste Item', use_container_width=True)
     
     # 5. Analysis Logic
-    if st.button('Analyze with AI'):
+    if st.button('Analyze with Eco-Scan AI'):
         with st.spinner('Gemini AI is analyzing material...'):
             try:
                 # Custom instructions for the AI
@@ -53,14 +59,10 @@ if uploaded_file is not None:
                     st.warning("The AI returned an empty response. Please try a clearer photo.")
                     
             except Exception as e:
-                # This will catch and display specific error codes (like 403 or 429)
+                # This will catch specific error codes (like 403 or 429)
                 st.error(f"Raw API Error: {e}")
                 if "403" in str(e):
-                    st.info("💡 Your API key is likely blocked. Generate a new key in Google AI Studio.")
-                elif "429" in str(e):
-                    st.info("💡 You have reached the free tier limit. Wait a few minutes and try again.")
-                elif "404" in str(e):
-                    st.info("💡 Model not found. The server region may not support this specific model version.")
+                    st.warning("⚠️ This API Key has been blocked or restricted by Google.")
 
 # 6. Footer
 st.markdown("---")
