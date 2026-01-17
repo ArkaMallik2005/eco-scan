@@ -22,9 +22,9 @@ st.title("🌱 Eco-Scan: AI Waste Assistant")
 st.markdown("---")
 
 # 3. Model Initialization
-# We use Gemini 2.5 Flash as it is the most stable version for 2026.
+# We use Gemini 3 Flash as it is the most stable version for 2026.
 try:
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel('gemini-3-flash-preview')
 except Exception as e:
     st.error(f"Model initialization failed: {e}")
     st.stop()
@@ -43,9 +43,7 @@ if uploaded_file is not None:
             try:
                 # Custom instructions for the AI
                 prompt = (
-                    "Act as a sustainability expert. Identify the object and its material in this image. "
-                    "Provide a report including: 1. Material Type. 2. Is it recyclable? "
-                    "3. Step-by-step sustainable disposal instructions."
+                    "Identify the object and materials. Provide the result in a clean Markdown table with columns: 'Component', 'Material', 'Recycling Symbol', and 'Disposal Action'."
                 )
                 
                 # Make the API call
