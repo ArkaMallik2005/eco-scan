@@ -4,7 +4,7 @@ import google.generativeai as genai
 from PIL import Image
 
 # 1. Setup API Key
-API_KEY = "AIzaSyA6a0Wk_DEvEFhHMEqEOOFvXwwPF6rC6s0"
+API_KEY = "AIzaSyC3fziwX3AJtd4TWB7iobBMcNj6nxo9Qj8"
 genai.configure(api_key=API_KEY)
 
 # 2. Page Configuration
