@@ -14,7 +14,7 @@ st.title("🌱 Eco-Scan: AI Waste Assistant")
 # 3. Model Initialization with Error Handling
 # We use the explicit model string to avoid the "NotFound" error
 try:
-    model = genai.GenerativeModel('gemini-1.5-flash-8b')
+    model = genai.GenerativeModel('gemini-1.5-pro')
 except Exception as e:
     st.error(f"Model initialization failed: {e}")
 
